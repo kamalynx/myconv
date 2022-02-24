@@ -1,4 +1,5 @@
 """Convert all tables in selected database from old engine to new."""
+import re
 from sys import exit
 try:
     import click
@@ -40,11 +41,12 @@ def main(old: str, new: str, **conn_param):
             cur.execute('SHOW TABLE STATUS WHERE ENGINE = %s', (old, ))
             tables = cur.fetchall()
             for table in tables:
+                clear_table_name = re.sub('[^A-Za-z0-9_]', '', table[0])
                 _sql = 'ALTER TABLE `{0}` ENGINE = %s'
                 click.echo(
-                    f'Change engine for {table[0]} from {old} to {new}.'
+                    f'Change engine for {clear_table_name} from {old} to {new}.'
                 )
-                cur.execute(_sql.format(table[0]), (new))
+                cur.execute(_sql.format(clear_table_name), (new))
     except pymysql.Error as err:
         print(err.args)
 
