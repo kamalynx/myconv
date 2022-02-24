@@ -1,5 +1,4 @@
 """Convert all tables in selected database from old engine to new."""
-import re
 from sys import exit
 try:
     import click
@@ -45,8 +44,7 @@ def main(old: str, new: str, **conn_param):
                 click.echo(
                     f'Change engine for {table[0]} from {old} to {new}.'
                 )
-                filtered_new = re.sub('[^A-Za-z0-9_]', '', new)
-                cur.execute(_sql.format(table[0]), (filtered_new))
+                cur.execute(_sql.format(table[0]), (new))
     except pymysql.Error as err:
         print(err.args)
 
