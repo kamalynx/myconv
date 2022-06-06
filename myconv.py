@@ -11,6 +11,8 @@ logging.basicConfig(format='[ %(levelname)s ]\t%(message)s', level=logging.INFO)
 
 class Database:
     def __init__(self) -> None:
+        mysql_engines = ('MyISAM', 'InnoDB', 'Aria', 'ROCKSDB')
+
         parser = argparse.ArgumentParser(
             description="""С помощью этого скрипта можно изменить тип таблиц
             базы данных MySQL. Например, с MyISAM на InnoDB.
@@ -35,10 +37,12 @@ class Database:
 
         )
         parser.add_argument(
-            '--old', default='MyISAM', help='old engine', type=str
+            '--old', default='MyISAM', help='old engine', type=str,
+            choices=mysql_engines
         )
         parser.add_argument(
-            '--new', default='InnoDB', help='new engine', type=str
+            '--new', default='InnoDB', help='new engine', type=str,
+            choices=mysql_engines
         )
         parser.add_argument(
             '--charset', default='utf8mb4', help='connection charset',
