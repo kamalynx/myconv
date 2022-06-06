@@ -58,8 +58,9 @@ class Database:
         try:
             self.connection = pymysql.connect(**conn_params)
         except pymysql.Error as err:
-            logging.error('Код ошибки: %s', err.args[0])
-            logging.error('Сообщение: %s', err.args[1])
+            code, message = err.args
+            logging.error('Код ошибки: %s', code)
+            logging.error('Сообщение: %s', message)
             return sys.exit(1)
         return self
 
