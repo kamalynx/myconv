@@ -114,4 +114,6 @@ class Database:
 if __name__ == '__main__':
     with Database() as db:
         db.change_engine()
-        db.get_current_state()
+        answer = str(input('Показать статус таблиц? (y/n) '))
+        if 'y' in answer:
+            db.get_current_state()
