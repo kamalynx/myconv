@@ -74,7 +74,7 @@ class Database:
             return logging.info('%s', exc_value)
 
     @property
-    def list_tables(self) -> list:
+    def __list_tables(self) -> list:
         """Получить список таблиц указанной базы данных."""
         with self.connection.cursor() as cur:
             _query = 'SHOW TABLE STATUS WHERE ENGINE = %s'
@@ -94,8 +94,8 @@ class Database:
                     table['Name'], table['Engine']
                 )
 
-    def change_engine(self, tables: list = None):
-        for table in tables:
+    def change_engine(self):
+        for table in self.__list_tables:
             with self.connection.cursor() as cur:
                 logging.info(
                     'Изменение движка для таблицы "%s" с <%s> на <%s>',
@@ -113,5 +113,5 @@ class Database:
 
 if __name__ == '__main__':
     with Database() as db:
-        db.change_engine(db.list_tables)
+        db.change_engine()
         db.get_current_state()
