@@ -97,14 +97,18 @@ class Database:
                     'Изменение движка для таблицы "%s" на <%s>',
                     table, self.args.new_engine
                 )
-                _query = 'ALTER TABLE `{0}` ENGINE = %s'.format(table)
-                cur.execute(_query, (self.args.new_engine, ))
-                cur.execute('SHOW TABLE STATUS WHERE Name = %s', (table,))
-                current_table = cur.fetchone()
-                logging.info(
-                    'Новый движок таблицы "%s": %s',
-                    current_table.get('Name'), current_table.get('Engine')
-                )
+                _query = f'ALTER TABLE `{table}` ENGINE = %s'
+                try:
+                    cur.execute(_query, (self.args.new_engine, ))
+                except pymysql.Error as err:
+                    logging.error(err.args[1])
+                else:
+                    cur.execute('SHOW TABLE STATUS WHERE Name = %s', (table,))
+                    current_table = cur.fetchone()
+                    logging.info(
+                        'Новый движок таблицы "%s": %s',
+                        current_table.get('Name'), current_table.get('Engine')
+                    )
 
 
 if __name__ == '__main__':
