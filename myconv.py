@@ -37,12 +37,8 @@ class Database:
 
         )
         parser.add_argument(
-            '--old', default='MyISAM', help='old engine', type=str,
-            choices=mysql_engines
-        )
-        parser.add_argument(
             '--new', default='InnoDB', help='new engine', type=str,
-            choices=mysql_engines
+            choices=mysql_engines, dest='new_engine'
         )
         parser.add_argument(
             '--charset', default='utf8mb4', help='connection charset',
@@ -74,14 +70,14 @@ class Database:
             return logging.info('%s', exc_value)
 
     @property
-    def __list_tables(self) -> list:
+    def __tables(self) -> tuple:
         """Получить список таблиц указанной базы данных."""
         with self.connection.cursor() as cur:
-            _query = 'SHOW TABLE STATUS WHERE ENGINE = %s'
-            cur.execute(_query, (self.args.old, ))
+            _query = 'SHOW TABLE STATUS WHERE ENGINE != %s'
+            cur.execute(_query, (self.args.new_engine, ))
             tables = cur.fetchall()
-            self.table_list = [table['Name'] for table in tables]
-            return self.table_list
+            self.tables = tuple(table['Name'] for table in tables)
+            return self.tables
 
     def get_current_state(self) -> None:
         """Получить информацию о существующих таблицах в базе данных."""
@@ -94,15 +90,15 @@ class Database:
                     table['Name'], table['Engine']
                 )
 
-    def change_engine(self):
-        for table in self.__list_tables:
+    def change_engine(self) -> None:
+        for table in self.__tables:
             with self.connection.cursor() as cur:
                 logging.info(
-                    'Изменение движка для таблицы "%s" с <%s> на <%s>',
-                    table, self.args.old, self.args.new
+                    'Изменение движка для таблицы "%s" на <%s>',
+                    table, self.args.new_engine
                 )
                 _query = 'ALTER TABLE `{0}` ENGINE = %s'.format(table)
-                cur.execute(_query, (self.args.new, ))
+                cur.execute(_query, (self.args.new_engine, ))
                 cur.execute('SHOW TABLE STATUS WHERE Name = %s', (table,))
                 current_table = cur.fetchone()
                 logging.info(
