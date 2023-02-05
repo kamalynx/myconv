@@ -1,12 +1,13 @@
 import argparse
 import logging
-from typing import Optional
 import sys
+from typing import Optional
 
 import pymysql
 
-
-logging.basicConfig(format='[ %(levelname)s ]\t%(message)s', level=logging.INFO)
+logging.basicConfig(
+    format='[ %(levelname)s ]\t%(message)s', level=logging.INFO
+)
 
 
 class Database:
@@ -19,8 +20,11 @@ class Database:
             """
         )
         parser.add_argument(
-            '--database', default='test', help='database', type=str,
-            required=True
+            '--database',
+            default='test',
+            help='database',
+            type=str,
+            required=True,
         )
         parser.add_argument(
             '--host', default='localhost', help='hostname', type=str
@@ -28,21 +32,23 @@ class Database:
         parser.add_argument(
             '--user', default='root', help='username', type=str
         )
+        parser.add_argument('--password', help='password', type=str)
         parser.add_argument(
-            '--password', help='password', type=str
+            '--unix_socket',
+            default='/var/run/mysqld/mysqld.sock',
+            help='path to unix socket',
+            type=str,
         )
         parser.add_argument(
-            '--unix_socket', default='/var/run/mysqld/mysqld.sock',
-            help='path to unix socket', type=str
-
+            '--new',
+            default='InnoDB',
+            help='new engine',
+            type=str,
+            choices=mysql_engines,
+            dest='new_engine',
         )
         parser.add_argument(
-            '--new', default='InnoDB', help='new engine', type=str,
-            choices=mysql_engines, dest='new_engine'
-        )
-        parser.add_argument(
-            '--charset', default='utf8mb4', help='connection charset',
-            type=str
+            '--charset', default='utf8mb4', help='connection charset', type=str
         )
         self.args = parser.parse_args()
 
@@ -53,7 +59,7 @@ class Database:
             'user': self.args.user,
             'password': self.args.password,
             'unix_socket': self.args.unix_socket,
-            'cursorclass': pymysql.cursors.DictCursor
+            'cursorclass': pymysql.cursors.DictCursor,
         }
         try:
             self.connection = pymysql.connect(**conn_params)
@@ -74,7 +80,7 @@ class Database:
         """Получить список таблиц указанной базы данных."""
         with self.connection.cursor() as cur:
             _query = 'SHOW TABLE STATUS WHERE ENGINE != %s'
-            cur.execute(_query, (self.args.new_engine, ))
+            cur.execute(_query, (self.args.new_engine,))
             tables = cur.fetchall()
             self.tables = tuple(table['Name'] for table in tables)
             return self.tables
@@ -86,8 +92,7 @@ class Database:
             tables = cur.fetchall()
             for table in tables:
                 logging.info(
-                    'Таблица: %s, движок: %s',
-                    table['Name'], table['Engine']
+                    'Таблица: %s, движок: %s', table['Name'], table['Engine']
                 )
 
     def change_engine(self) -> None:
@@ -95,11 +100,12 @@ class Database:
             with self.connection.cursor() as cur:
                 logging.info(
                     'Изменение движка для таблицы "%s" на <%s>',
-                    table, self.args.new_engine
+                    table,
+                    self.args.new_engine,
                 )
                 _query = f'ALTER TABLE `{table}` ENGINE = %s'
                 try:
-                    cur.execute(_query, (self.args.new_engine, ))
+                    cur.execute(_query, (self.args.new_engine,))
                 except pymysql.Error as err:
                     logging.error(err.args[1])
                 else:
@@ -107,7 +113,8 @@ class Database:
                     current_table = cur.fetchone()
                     logging.info(
                         'Новый движок таблицы "%s": %s',
-                        current_table.get('Name'), current_table.get('Engine')
+                        current_table.get('Name'),
+                        current_table.get('Engine'),
                     )
 
 
